@@ -118,6 +118,29 @@
     (invalid! schema :foo "(throws? (odd? :foo))")
     (is (= '(pred odd?) (s/explain schema)))))
 
+(defprotocol ATestProtocol (unused-method-for-clj-one-point-four-compatibility [x]))
+
+(s/defn ^:always-validate a-test-protocol-fn
+  "Compile the schema before extending, make sure it works as expected"
+  [x :- (s/protocol ATestProtocol)]
+  x)
+
+(defrecord DirectTestProtocolSatisfier [] ATestProtocol (unused-method-for-clj-one-point-four-compatibility [x] nil))
+(defrecord IndirectTestProtocolSatisfier []) (extend-type IndirectTestProtocolSatisfier ATestProtocol)
+(defrecord NonTestProtocolSatisfier [])
+
+(deftest protocol-test
+  (let [schema (s/protocol ATestProtocol)]
+    (valid! schema (DirectTestProtocolSatisfier.))
+    (valid! schema (IndirectTestProtocolSatisfier.))
+    (invalid! schema (NonTestProtocolSatisfier.))
+    (invalid! schema nil)
+    (invalid! schema 117 "(not (satisfies? ATestProtocol 117))")
+    (is (a-test-protocol-fn (DirectTestProtocolSatisfier.)))
+    (is (a-test-protocol-fn (IndirectTestProtocolSatisfier.)))
+    (invalid-call! a-test-protocol-fn (NonTestProtocolSatisfier.))
+    (is (= '(protocol ATestProtocol) (s/explain schema)))))
+
 (deftest regex-test
   (valid! #"lex" "Alex B")
   (valid! #"lex" "lex")
@@ -552,6 +575,7 @@
 
   (deftest normalized-metadata-test
     (testing "empty" (test-normalized-meta 'foo nil {:schema s/Any}))
+    (testing "protocol" (test-normalized-meta ^ATestProtocol foo nil {:schema (s/protocol ATestProtocol)}))
     (testing "primitive" (test-normalized-meta ^long foo nil {:tag long :schema long}))
     (testing "class" (test-normalized-meta ^String foo nil {:tag String :schema String}))
     (testing "non-tag" (test-normalized-meta ^ASchema foo nil {:schema ASchema}))
