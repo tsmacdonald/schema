@@ -1,8 +1,7 @@
 (ns schema.coerce
   "Experimental extension of schema for input coercion (coercing an input to match a schema)"
   (:require
-   #+cljs [cljs.reader :as reader]
-   #+clj [clojure.edn :as edn]
+   #+cljs [cljs.reader :refer [read-string]]
    #+clj [schema.macros :as macros]
    [schema.core :as s :include-macros true]
    [schema.utils :as utils]
@@ -101,9 +100,12 @@
       (keyword-enum-matcher schema)
       (set-matcher schema)))
 
-(def edn-read-string
+(defn edn-read-string
   "Reads one object from a string. Returns nil when string is nil or empty"
-  #+clj edn/read-string #+cljs reader/read-string)
+  [form]
+  (when-not (re-matches #"\s*" form)
+    (binding [*read-eval* false]
+      (read-string form))))
 
 (def ^:no-doc +string-coercions+
   (merge

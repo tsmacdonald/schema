@@ -6,7 +6,7 @@
 
   :dependencies [[potemkin "0.3.2"]]
 
-  :profiles {:dev {:dependencies [[org.clojure/clojure "1.6.0"]
+  :profiles {:dev {:dependencies [[org.clojure/clojure "1.4.0"]
                                   [org.clojure/clojurescript "0.0-2120"]
                                   [com.keminglabs/cljx "0.3.1"]]
                    :plugins [[com.keminglabs/cljx "0.3.1"]
